@@ -30,6 +30,7 @@ from prettytable import PrettyTable
 assert cf
 import datetime
 from datetime import date
+import time
 
 
 """
@@ -131,10 +132,10 @@ def print_avistamientosconlatitudylongitud(author):
     """
     if author:
         print("\n")
-        x = PrettyTable(["Fecha", "Ciudad", 'Pais','Duracion (Segundos)','Forma','Longitud','Latitud'])
-        x._max_width = {"Fecha" : 20, "Ciudad" : 20,"Pais" : 20, "Duracion (Segundos)" : 20,"Forma" : 20,"Longitud" : 20,"Latitud" : 20}
+        x = PrettyTable(["Fecha", "Ciudad", 'Pais','Duracion (Segundos)','Forma','Latitud','Longitud'])
+        x._max_width = {"Fecha" : 20, "Ciudad" : 20,"Pais" : 20, "Duracion (Segundos)" : 20,"Forma" : 20,"Latitud" : 20,"Longitud" : 20}
         for artistas in lt.iterator(author):
-            x.add_row([artistas['datetime']+'\n', artistas['city'],artistas['country'],artistas['duration (seconds)'],artistas['shape'],str(round(float(artistas['longitude']),2)),str(round(float(artistas['latitude']),2))])
+            x.add_row([artistas['datetime']+'\n', artistas['city'],artistas['country'],artistas['duration (seconds)'],artistas['shape'],str(round(float(artistas['latitude']),2)),str(round(float(artistas['longitude']),2))])
         print(x)
         print("\n")
     else:
@@ -172,6 +173,7 @@ while True:
 
     elif int(inputs[0]) == 3:
         ciudad = input("Escriba la ciudad que quiere consultar: ")
+        start_time = time.process_time()
         respuesta = controller.primer_req(cont,ciudad,ciudades_orden)
         print(('*'*90) + ('\n') +"El total de ciudades donde se reportaron avistamientos es de: "+ ' ' + str(respuesta[0])+ '\n')
         print(('*'*90) + ('\n') +"Este es el Top 5 de ciudades con mas avistamientos: : "+ '\n')
@@ -181,10 +183,14 @@ while True:
         print_avistamientos(respuesta[2])
         print(('*'*90) + ('\n') +"Estos son los ultimos 3 avistamientos de la ciudad: : "+ '\n')
         print_avistamientos(respuesta[3])
+        stop_time = time.process_time()
+        elapsed_time_mseg = (stop_time - start_time)*1000
+        print(elapsed_time_mseg)
 
     elif int(inputs[0]) == 4:
         duracion_inicial = float(input("Escriba la duracion inicial que desea buscar: "))
         duracion_final = float(input("Escriba la duracion final que desea buscar: "))
+        start_time = time.process_time()
         respuesta = controller.segundo_req(cont,duracion_inicial,duracion_final)
         print(('*'*90) + ('\n') +"El total de duraciones diferentes es de: "+ ' ' + str(lt.size(om.keySet(cont['IndiceDuracionseg'])))+ '\n')
         print(('*'*90) + ('\n') +"Estas son el Top 5 de duracion mas largas: "+ '\n')
@@ -194,33 +200,44 @@ while True:
         print_avistamientos(respuesta[2])
         print(('*'*90) + ('\n') +"Estos son los ultimos 3 avistamientos en el rango: : "+ '\n')
         print_avistamientos(respuesta[3])
+        stop_time = time.process_time()
+        elapsed_time_mseg = (stop_time - start_time)*1000
+        print(elapsed_time_mseg)
 
     elif int(inputs[0]) == 5:
         fecha_inicial = (input("Escriba la fecha inicial que desea buscar: "))
         fecha_final = (input("Escriba la fecha final que desea buscar: "))
         fecha_inicial = datetime.datetime.strptime(fecha_inicial, '%Y-%m-%d').date()
         fecha_final = datetime.datetime.strptime(fecha_final, '%Y-%m-%d').date()
+        start_time = time.process_time()
         respuesta = controller.cuarto_req(cont,fecha_inicial,fecha_final)
         print(('*'*90) + ('\n') +"El total de diferentes fechas es de: "+ ' ' + str(respuesta[0])+ '\n')
-        print(('*'*90) + ('\n') +"Estas son el Top 5 de duracion mas largas: "+ '\n')
+        print(('*'*90) + ('\n') +"Estas son el Top 5 de fechas mas antiguas: "+ '\n')
         print_FechaAntiguasyCantidad(respuesta[1])
         print(('*'*90) + ('\n') +"El total de avistamientos en el rango es de: "+ ' ' + str(respuesta[2])+ '\n')
         print(('*'*90) + ('\n') +"Estos son los primeros 3 avistamientos en el rango: : "+ '\n')
         print_avistamientos(respuesta[3])
         print(('*'*90) + ('\n') +"Estos son los ultimos 3 avistamientos en el rango: : "+ '\n')
         print_avistamientos(respuesta[4])
+        stop_time = time.process_time()
+        elapsed_time_mseg = (stop_time - start_time)*1000
+        print(elapsed_time_mseg)
 
     elif int(inputs[0]) == 6:
         longitud_inicial = float(input("Escriba la longitud inicial que desea buscar: "))
         longitud_final = float(input("Escriba la longitud final que desea buscar: "))
         latitud_inicial = float(input("Escriba la latitud inicial que desea buscar: "))
         latitud_final = float(input("Escriba la latitud final que desea buscar: "))
+        start_time = time.process_time()
         respuesta = controller.quinto_req(cont,longitud_inicial,longitud_final,latitud_inicial,latitud_final)
         print(('*'*90) + ('\n') +"El total de avistamientos en el rango es de: "+ ' ' + str(respuesta[0])+ '\n')
         print(('*'*90) + ('\n') +"Estos son los primeros 5 avistamientos en el rango: : "+ '\n')
         print_avistamientosconlatitudylongitud(respuesta[1])
         print(('*'*90) + ('\n') +"Estos son los ultimos 5 avistamientos en el rango: : "+ '\n')
         print_avistamientosconlatitudylongitud(respuesta[2])
+        stop_time = time.process_time()
+        elapsed_time_mseg = (stop_time - start_time)*1000
+        print(elapsed_time_mseg)
 
     else:
         sys.exit(0)
