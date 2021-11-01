@@ -451,6 +451,7 @@ def segundo_req(catalogo,duracion_inicial,duracion_final):
         llaves = om.keys(catalogo['IndiceDuracionseg'],duracion_inicial,duracion_final)
         total = 0
         avistamientosrango = lt.newList('ARRAY_LIST')
+        avistamientosrangofinal = lt.newList('ARRAY_LIST')
         for c in lt.iterator(llaves):
             llavevalor = om.get(catalogo['IndiceDuracionseg'],c)
             cantidades = me.getValue(llavevalor)['ListaAvistamientos']
@@ -462,8 +463,7 @@ def segundo_req(catalogo,duracion_inicial,duracion_final):
             for ciudad in lt.iterator(om.keySet(mapa)):
                 llavevalorciudad = om.get(mapa,ciudad)
                 valorciudad = me.getValue(llavevalorciudad)['ListaAvistamientosporFecha']
-                for j in lt.iterator(valorciudad):
-                    lt.addLast(avistamientosrango,j)
+                lt.addLast(avistamientosrango,valorciudad)
         sublistaultimos = lt.subList(llaves,lt.size(llaves)-2,3)
         for ultimos in lt.iterator(sublistaultimos):
             llave_valor_primeros = om.get(catalogo['IndiceDuracionseg'],ultimos)
@@ -471,10 +471,12 @@ def segundo_req(catalogo,duracion_inicial,duracion_final):
             for ciudad in lt.iterator(om.keySet(mapa)):
                 llavevalorciudad = om.get(mapa,ciudad)
                 valorciudad = me.getValue(llavevalorciudad)['ListaAvistamientosporFecha']
-                for j in lt.iterator(valorciudad):
-                    lt.addLast(avistamientosrango,j)
-        primeros3finales = lt.subList(avistamientosrango,1,3)
-        ultimos3finales = lt.subList(avistamientosrango,lt.size(avistamientosrango)-2,3)
+                lt.addLast(avistamientosrango,valorciudad)
+        for ciudades in lt.iterator(avistamientosrango):
+            for internas in lt.iterator(ciudades):
+                lt.addLast(avistamientosrangofinal,internas)
+        primeros3finales = lt.subList(avistamientosrangofinal,1,3)
+        ultimos3finales = lt.subList(avistamientosrangofinal,lt.size(avistamientosrangofinal)-2,3)
         return total,medida,primeros3finales,ultimos3finales,duracion_top
 
 def cuarto_req(catalogo,fecha_inicial,fecha_final):
@@ -514,15 +516,11 @@ def cuarto_req(catalogo,fecha_inicial,fecha_final):
 
 def quinto_req(catalogo,longitud_inicial,longitud_final,latitud_inicial,latitud_final):
     valores = om.values(catalogo['IndiceLongitud'],longitud_inicial,longitud_final)
-    final = lt.newList('ARRAY_LIST')
+    total = 0
     for c in lt.iterator(valores):
         valores_latitud = om.values(c['LatitudIndice'],latitud_inicial,latitud_final)
-        if lt.size(valores_latitud) >= 1:
-            for j in lt.iterator(valores_latitud):
-                for k in lt.iterator(j['ListaAvistamientosporFecha']):
-                    lt.addLast(final,k)
-    orden_cronologico = sortDuracionRango(final)
-    total = lt.size(orden_cronologico)
+        for j in lt.iterator(valores_latitud):
+            total += lt.size(j['ListaAvistamientosporFecha'])
     orden = lt.newList('ARRAY_LIST')
     resultados = lt.newList('ARRAY_LIST')
     for c in lt.iterator(valores):
