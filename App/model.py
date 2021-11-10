@@ -63,6 +63,8 @@ def newCatalogo():
                                       comparefunction=compareCiudad)
     catalog['IndiceLongitud'] = om.newMap(omaptype='BST',
                                       comparefunction=compareCiudad)
+    catalog['IndiceDuracionHM'] = om.newMap(omaptype='BST',
+                                      comparefunction=compareCiudad)
 
     return catalog
 
@@ -76,6 +78,7 @@ def addAvistamiento(catalog, avistamiento):
     updateIndiceDuracion(catalog['IndiceDuracionseg'], avistamiento)
     updateIndiceFecha(catalog['IndiceFecha'], avistamiento)
     updateIndiceLongitud(catalog['IndiceLongitud'], avistamiento)
+    updateIndiceDuracionHM(catalog['IndiceDuracionHM'], avistamiento)
     return catalog
 
 def updateIndiceCiudad(map, avistamiento):
@@ -135,6 +138,25 @@ def updateIndiceFecha(map, avistamiento):
     addFechaIndexsubFecha(datentry, avistamiento)
     return map
 
+def updateIndiceDuracionHM(map, avistamiento):
+    """
+    Se toma la fecha del crimen y se busca si ya existe en el arbol
+    dicha fecha.  Si es asi, se adiciona a su lista de crimenes
+    y se actualiza el indice de tipos de crimenes.
+
+    Si no se encuentra creado un nodo para esa fecha en el arbol
+    se crea y se actualiza el indice de tipos de crimenes
+    """
+    tiempo = (datetime.datetime.strptime(avistamiento['datetime'], '%Y-%m-%d %H:%M:%S')).time()
+    entry = om.get(map, tiempo)
+    if entry is None:
+        datentry = newDataEntryDuracionMin(avistamiento)
+        om.put(map, tiempo, datentry)
+    else:
+        datentry = me.getValue(entry)
+    addHMIndexsubHM(datentry, avistamiento)
+    return map
+
 def updateIndiceLongitud(map, avistamiento):
     """
     Se toma la fecha del crimen y se busca si ya existe en el arbol
@@ -185,6 +207,27 @@ def addFechaIndexsubFecha(datentry, avistamiento):
     lst = datentry['ListaAvistamientos']
     lt.addLast(lst, avistamiento)
     offenseIndex = datentry['FechaIndice']
+    fecha_avistamiento = avistamiento['datetime']
+    offentry = om.get(offenseIndex, fecha_avistamiento)
+    if (offentry is None):
+        entry = newOffenseEntryDuracionseg(fecha_avistamiento, avistamiento)
+        lt.addLast(entry['ListaAvistamientosporFecha'], avistamiento)
+        om.put(offenseIndex, fecha_avistamiento, entry)
+    else:
+        entry = me.getValue(offentry)
+        lt.addLast(entry['ListaAvistamientosporFecha'], avistamiento)
+    return datentry
+
+def addHMIndexsubHM(datentry, avistamiento):
+    """
+    Actualiza un indice de tipo de crimenes.  Este indice tiene una lista
+    de crimenes y una tabla de hash cuya llave es el tipo de crimen y
+    el valor es una lista con los crimenes de dicho tipo en la fecha que
+    se está consultando (dada por el nodo del arbol)
+    """
+    lst = datentry['ListaAvistamientos']
+    lt.addLast(lst, avistamiento)
+    offenseIndex = datentry['HMIndice']
     fecha_avistamiento = avistamiento['datetime']
     offentry = om.get(offenseIndex, fecha_avistamiento)
     if (offentry is None):
@@ -264,6 +307,17 @@ def newDataEntryDuracionseg(crime):
                                       comparefunction=compareCiudad)
     return entry
 
+def newDataEntryDuracionMin(Crime):
+    """
+    Crea una entrada en el indice por fechas, es decir en el arbol
+    binario.
+    """
+    entry = {'HMIndice': None, 'ListaAvistamientos': None}
+    entry['ListaAvistamientos'] = lt.newList('SINGLE_LINKED', compareCiudad)
+    entry['HMIndice'] = om.newMap(omaptype='BST',
+                                      comparefunction=compareCiudad)
+    return entry
+
 def newDataEntryLatitud(crime):
     """
     Crea una entrada en el indice por fechas, es decir en el arbol
@@ -322,6 +376,16 @@ def FechaMasAntiguas(Fecha,cantidad):
     """
     ofentry = {'Fecha': None, 'cantidad': None}
     ofentry['Fecha'] = Fecha
+    ofentry['cantidad'] = cantidad
+    return ofentry
+
+def HorasMasAntiguas(Hora,cantidad):
+    """
+    Crea una entrada en el indice por tipo de crimen, es decir en
+    la tabla de hash, que se encuentra en cada nodo del arbol.
+    """
+    ofentry = {'Hora': None, 'cantidad': None}
+    ofentry['Hora'] = Hora
     ofentry['cantidad'] = cantidad
     return ofentry
 
@@ -545,3 +609,38 @@ def quinto_req(catalogo,longitud_inicial,longitud_final,latitud_inicial,latitud_
         ultimos = resultados
 
     return total,primeros,ultimos
+
+def tercer_req(catalogo,hora_inicial,hora_final):
+
+    medida = om.size(catalogo['IndiceDuracionHM'])
+    mas_antiguas_llaves = lt.subList(om.keySet(catalogo['IndiceDuracionHM']),1,5)
+    top5antiguas = lt.newList('ARRAY_LIST')
+    for c in lt.iterator(mas_antiguas_llaves):
+        llavevalor = om.get(catalogo['IndiceDuracionHM'],c)
+        cantidades = me.getValue(llavevalor)['ListaAvistamientos']
+        fechaycantidad = HorasMasAntiguas(c,lt.size(cantidades))
+        lt.addLast(top5antiguas,fechaycantidad)
+    llaves = om.keys(catalogo['IndiceDuracionHM'],hora_inicial,hora_final)
+    total = 0
+    for c in lt.iterator(llaves):
+        llavevalor = om.get(catalogo['IndiceDuracionHM'],c)
+        cantidades = me.getValue(llavevalor)['ListaAvistamientos']
+        total += int(lt.size(cantidades))
+    valores = om.values(catalogo['IndiceDuracionHM'],hora_inicial,hora_final)
+    valores_primeros = lt.subList(valores,1,3)
+    listaavistamientosprimeros = lt.newList('ARRAY_LIST')
+    for k in lt.iterator(valores_primeros):
+        lista = k['ListaAvistamientos']
+        for j in lt.iterator(lista):
+            lt.addLast(listaavistamientosprimeros,j)
+    primeros_orden = sortDuracionRango(listaavistamientosprimeros)
+    primero3 = lt.subList(primeros_orden,1,3)
+    finales = lt.subList(valores,lt.size(valores)-2,3)
+    listaavistamientosultimos = lt.newList('ARRAY_LIST')
+    for l in lt.iterator(finales):
+        lista = l['ListaAvistamientos']
+        for t in lt.iterator(lista):
+            lt.addLast(listaavistamientosultimos,t)
+    ultimos_orden = sortDuracionRango(listaavistamientosultimos)
+    lista_final = lt.subList(ultimos_orden,int(lt.size(ultimos_orden))-2,3)
+    return medida,top5antiguas,total,primero3,lista_final

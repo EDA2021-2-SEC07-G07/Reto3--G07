@@ -141,6 +141,21 @@ def print_avistamientosconlatitudylongitud(author):
     else:
         print('No se encontro el autor.\n')
 
+def print_HoraAntiguasyCantidad(author):
+    """
+    Imprime la información del autor seleccionado
+    """
+    if author:
+        print("\n")
+        x = PrettyTable(["Hora", "Cantidad"])
+        x._max_width = {"Hora" : 20, "Cantidad" : 20}
+        for artistas in lt.iterator(author):
+            x.add_row([str(artistas['Hora'])+'\n', artistas['cantidad']])
+        print(x)
+        print("\n")
+    else:
+        print('No se encontro el autor.\n')
+
 
 def printMenu():
     print("Bienvenido")
@@ -150,6 +165,7 @@ def printMenu():
     print("4- Contar los avistamientos por duracion")
     print("5- Contar los avistamientos por fecha")
     print("6- Contar los avistamientos por area")
+    print("7- Contar los avistamientos por Hora")
     print("0- Salir")
 
 catalog = None
@@ -235,6 +251,26 @@ while True:
         print_avistamientosconlatitudylongitud(respuesta[1])
         print(('*'*90) + ('\n') +"Estos son los ultimos 5 avistamientos en el rango: : "+ '\n')
         print_avistamientosconlatitudylongitud(respuesta[2])
+        stop_time = time.process_time()
+        elapsed_time_mseg = (stop_time - start_time)*1000
+        print(elapsed_time_mseg)
+
+    elif int(inputs[0]) == 7:
+        Hora_inicial = (input("Escriba la hora (HH:MM) inicial que desea buscar: "))
+        Hora_final = (input("Escriba la hora (HH:MM) final que desea buscar: "))
+        hora_inicial = datetime.datetime.strptime(Hora_inicial, '%H:%M').time()
+        hora_final = datetime.datetime.strptime(Hora_final, '%H:%M').time()
+        start_time = time.process_time()
+
+        respuesta = controller.tercer_req(cont,hora_inicial,hora_final)
+        print(('*'*90) + ('\n') +"El total de diferentes horas es de: "+ ' ' + str(respuesta[0])+ '\n')
+        print(('*'*90) + ('\n') +"Estas son el Top 5 de duracion mas largas: "+ '\n')
+        print_HoraAntiguasyCantidad(respuesta[1])
+        print(('*'*90) + ('\n') +"El total de avistamientos en el rango es de: "+ ' ' + str(respuesta[2])+ '\n')
+        print(('*'*90) + ('\n') +"Estos son los primeros 3 avistamientos en el rango: : "+ '\n')
+        print_avistamientos(respuesta[3])
+        print(('*'*90) + ('\n') +"Estos son los ultimos 3 avistamientos en el rango: : "+ '\n')
+        print_avistamientos(respuesta[4])
         stop_time = time.process_time()
         elapsed_time_mseg = (stop_time - start_time)*1000
         print(elapsed_time_mseg)

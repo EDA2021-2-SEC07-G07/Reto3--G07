@@ -96,3 +96,7 @@ def quinto_req(catalog, longitud_inicial, longitud_final,latitud_inicial,latitud
     """
     avistamientos = model.quinto_req(catalog, longitud_inicial, longitud_final,latitud_inicial,latitud_final)
     return avistamientos
+
+def tercer_req(catalog, hora_ini, hora_fin):
+    avistamientos = model.tercer_req(catalog, hora_ini, hora_fin)
+    return avistamientos
